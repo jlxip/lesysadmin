@@ -1,0 +1,40 @@
+#!/bin/sh -e
+
+if [ $# -ne 2 ]; then
+	green "Usage: lesys ungroup ${BLUE}<system> <group to remove from>"
+	exit 1
+fi
+
+# Check system exists
+if [ "$(query ".systems.$1 | length")" -eq 0 ]; then
+	red "Could not find system ${BLUE}$1"
+	exit 1
+fi
+
+# Check it's not "none"
+if [ "$2" = "none" ]; then
+	red "The group ${BLUE}none${RED} is reserved"
+	exit 1
+fi
+
+# Check the system is in the group
+if [ "$(query ".systems.$1.groups | any(. == \"$2\")")" = "false" ]; then
+	red "System ${BLUE}$1${RED} is not in group ${BLUE}$2"
+	exit 1
+fi
+
+# Remove it
+update ".groups.$2 -= [\"$1\"]"
+update ".systems.$1.groups -= [\"$2\"]"
+
+# Did everyone left the group?
+if [ "$(query ".groups.$2 | length")" -eq 0 ]; then
+	# Remove it
+	update "del(.groups.$2)"
+fi
+
+# Is the system now groupless?
+if [ "$(query ".systems.$1.groups | length")" -eq 0 ]; then
+	# Yep, add it to "none"
+	update ".groups.none += [\"$1\"]"
+fi

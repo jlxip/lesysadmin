@@ -1,0 +1,24 @@
+#!/bin/sh -e
+
+if [ $# -ne 5 ]; then
+	green "Usage: lesys add ${BLUE}<name> <host> <port> <user> <path to SSH key>"
+	exit 1
+fi
+
+# Check if already exists
+if [ "$(query ".systems.$1 | length")" -ne 0 ]; then
+	red "System ${BLUE}$1${RED} already exists"
+	exit 1
+fi
+
+blue "Testing connection... " -n
+ssh -p $3 -l $4 -i "$5" $2 id > /dev/null || \
+	(red "FAILED" && \
+	exit 1)
+green "OK"
+
+SSHKEY="$(cat "$5")"
+SYSTEM="{\"$1\": {\"host\": \"$2\", \"port\": $3, \
+\"user\": \"$4\", \"key\": \"$SSHKEY\", \"groups\": []}}"
+update ".systems += $SYSTEM"
+update ".groups.none += [\"$1\"]"

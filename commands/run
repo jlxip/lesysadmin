@@ -1,0 +1,97 @@
+#!/bin/sh -e
+
+if [ $# -lt 2 ]; then
+	green "Usage: lesys run ${BLUE}<system> <playbook> [<args>]"
+	exit 1
+fi
+
+# Check system exists
+if [ "$(query ".systems.$1 | length")" -eq 0 ]; then
+	red "System ${BLUE}$1${RED} does not exist"
+	exit 1
+fi
+
+# Some information that might be needed by the playbooks
+PASS="$(query ".systems.$1.pass")"
+
+# Build the script, recursively across includes
+# TODO: Remove duplicates?
+rec() {
+	# Check this playbook exists
+	findplaybook "$1" &> /dev/null ||
+		(red "Could not find playbook ${BLUE}$1" "" >&2;
+		 exit 1)
+
+	# Get the source
+	source "$(findplaybook "$1")"
+	local RET="$(declare -f $EXECUTE)\n"
+	if [ $2 = 'T' ]; then
+		local RET="$RET\n$EXECUTE ${@: 3}"
+	fi
+
+	# Includes
+	for i in $INCLUDE; do
+		rec $i R
+	done
+
+	# Add myself at the end
+	echo -e "$RET"
+}
+SCRIPT="
+set -e # 👀
+_PASS=$PASS
+$(cat "$DIR/aux/runtime")
+$(rec $2 T "${@: 3}")
+"
+
+if [ ! -z "$DEBUG" ]; then
+	echo "$SCRIPT" | cat -n
+fi
+
+# Grab data
+HOST="$(echo "$CONFIG" | jq -r ".systems.$1.host")"
+PORT="$(echo "$CONFIG" | jq -r ".systems.$1.port")"
+USER="$(echo "$CONFIG" | jq -r ".systems.$1.user")"
+KEY="$(echo "$CONFIG" | jq -r ".systems.$1.key")"
+
+# Write key
+KF="$(mktemp)"
+chmod 600 $KF
+echo "$KEY" > $KF
+
+# Execute
+set +e
+RET="$(echo "$SCRIPT" | ssh -p $PORT -l $USER -i $KF -T $HOST)"
+EV=$?
+set -e
+
+# Destroy key
+shred $KF || :
+rm $KF
+
+# How did it go?
+source "$DIR/aux/runtime"
+case $EV in
+	$EXIT_OK)
+		green "OK"
+		if [ \( ! -z "$DEBUG" \) -o \( ! -z "$LSOUT" \) ]; then
+			echo "$RET"
+		fi
+	;;
+	$EXIT_SKIP)
+		blue "SKIPPING"
+		if [ \( ! -z "$DEBUG" \) -o \( ! -z "$LSOUT" \) ]; then
+			echo "$RET"
+		fi
+	;;
+	$EXIT_INCOMPATIBLE)
+		red "INCOMPATIBLE"
+		blue "$RET"
+		exit 1
+	;;
+	*)
+		red "Playbook ${BLUE}$2${RED}, for system ${BLUE}$1${RED} failed."
+		blue "$EV\n$RET"
+		exit 1
+	;;
+esac

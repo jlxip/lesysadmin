@@ -1,0 +1,12 @@
+#!/bin/sh -e
+
+# This MUST be defined, even if it's empty
+INCLUDE=""
+
+function os_execute() {
+	uname -s
+	return $EXIT_OK
+}
+
+# Function that will be executed in case this is the top level playbook
+EXECUTE="os_execute"

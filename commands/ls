@@ -1,0 +1,22 @@
+#!/bin/sh -e
+
+if [ $(query ".groups | length") -eq 0 ]; then
+	red "No servers yet"
+	green "Hint: add one with ${BLUE}lesys add"
+	exit 0
+fi
+
+for group in $(query ".groups | keys[]"); do
+	if [ "$group" != "none" ]; then
+		green "In group ${BLUE}$group${GREEN}:"
+	else
+		# "none" group always exists, even if it's empty
+		if [ "$(query ".groups.none | length")" -ne 0 ]; then
+			green "Ungrouped:"
+		fi
+	fi
+
+	for server in $(query ".groups.$group[]"); do
+		blue "\t$server"
+	done
+done

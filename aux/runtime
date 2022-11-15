@@ -1,0 +1,18 @@
+#!/bin/sh -e
+
+# Runtime utilities for playbooks
+
+export EXIT_OK=0
+export EXIT_SKIP=1
+export EXIT_INCOMPATIBLE=2
+
+assert_last_ok() {
+	case $? in
+		$EXIT_OK | $EXIT_SKIP)
+		;;
+		*)
+			echo "Assertion failed: $?"
+			exit 99
+		;;
+	esac
+}

@@ -1,0 +1,28 @@
+#!/bin/sh -e
+
+if [ $# -ne 2 ]; then
+	green "Usage: lesys group ${BLUE}<system> <group to add to>"
+	exit 1
+fi
+
+# Check system exists
+if [ "$(query ".systems.$1 | length")" -eq 0 ]; then
+	red "Could not find system ${BLUE}$1"
+	exit 1
+fi
+
+# Check it's not "none"
+if [ "$2" = "none" ]; then
+	red "The group ${BLUE}none${RED} is reserved"
+	exit 1
+fi
+
+# Does it already have a group?
+if [ "$(query ".systems.$1.groups | length")" -eq 0 ]; then
+	# No, remove it from "none"
+	update ".groups.none -= [\"$1\"]"
+fi
+
+# Add it to the new group
+update ".groups.$2 += [\"$1\"]"
+update ".systems.$1.groups += [\"$2\"]"

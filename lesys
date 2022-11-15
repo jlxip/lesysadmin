@@ -1,0 +1,40 @@
+#!/bin/sh -e
+
+export DIR="$(dirname -- "${BASH_SOURCE[0]}";)"
+source $DIR/aux/basics
+
+if [ $# -eq 0 ]; then
+	green "Welcome to Le Sysadmin"
+	echo
+	blue "Regarding systems"
+	green "add${RESET} (${RED}a${RESET}) - Add a new remote system"
+	green "pass${RESET} (${RED}p${RESET}) - Set password to use with sudo"
+	green "ls${RESET} (${RED}l${RESET}) - List groups and systems"
+	green "info${RESET} (${RED}i${RESET}) - Show information about a system"
+	green "remove${RESET} (${RED}rm${RESET}) - Remove a system"
+	echo
+
+	blue "Regarding groups"
+	green "group${RESET} (${RED}g${RESET}) - Add a system to a group"
+	green "ungroup${RESET} (${RED}ug${RESET}) - Remove a system from a group"
+	echo
+
+	blue "Regarding execution"
+	green "run${RESET} (${RED}r${RESET}) - Run a playbook on a system"
+	green "batch${RESET} (${RED}b${RESET}) - Run a playbook on a group"
+	echo
+
+	blue "Example: ${GREEN}lesys ls"
+	exit 0
+fi
+
+RUN="$DIR/commands/$1"
+
+if [ ! -f "$RUN" ]; then
+	red "Le Sysadmin: command ${BLUE}$1${RESET} ${RED}not found"
+	exit 1
+fi
+
+"$RUN" ${@: 2} || \
+	(red "Failed executing ${BLUE}$1";
+	 exit 1)

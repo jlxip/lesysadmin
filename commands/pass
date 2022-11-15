@@ -1,0 +1,20 @@
+#!/bin/sh -e
+
+if [ $# -ne 1 ]; then
+	green "Usage: lesys pass ${BLUE}<system>"
+	exit 1
+fi
+
+if [ "$(query ".systems.$1 | length")" -eq 0 ]; then
+	red "Could not find system ${BLUE}$1"
+	exit 1
+fi
+
+USER="$(query ".systems.$1.user")"
+green "Setting password for user ${BLUE}$USER${GREEN}@${BLUE}$1"
+
+echo -n "Password: "
+read -s PASS
+echo
+
+update ".systems.$1 += {\"pass\": \"$PASS\"}"

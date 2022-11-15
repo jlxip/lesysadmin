@@ -1,0 +1,17 @@
+#!/bin/sh -e
+
+INCLUDE="os"
+
+function distro_execute() {
+	# Check it's Linux
+	if [ "$(os_execute)" != "Linux" ]; then
+		echo "This is not a GNU/Linux system!"
+		return $EXIT_INCOMPATIBLE
+	fi
+
+	source /etc/os-release
+	echo "$ID"
+	return $EXIT_OK
+}
+
+EXECUTE="distro_execute"

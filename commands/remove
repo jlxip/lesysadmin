@@ -1,0 +1,25 @@
+#!/bin/sh -e
+
+if [ $# -ne 1 ]; then
+	green "Usage: lesys rm ${BLUE}<system>"
+	exit 1
+fi
+
+# Check system exists
+if [ "$(query ".systems.$1 | length")" -eq 0 ]; then
+	red "Could not find system ${BLUE}$1"
+	exit 1
+fi
+
+# Remove from all groups
+for group in $(query ".systems.$1.groups[]"); do
+	echo "Removing $1 from $group"
+	"$DIR/commands/ungroup" "$1" "$group"
+	reloadDB
+done
+
+# Remove the system
+update "del(.systems.$1)"
+
+# And remove from "none"
+update ".groups.none -= [\"$1\"]"

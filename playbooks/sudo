@@ -1,0 +1,35 @@
+#!/bin/sh -e
+
+INCLUDE="os"
+
+# $_PASS is given by Le Sysadmin
+# The only question is: how do we put it in?
+
+function sudo_execute() {
+	OS="$(os_execute)"
+	case "$OS" in
+		Linux)
+			echo "$_PASS" | sudo -S $@ 2>&1
+		;;
+		OpenBSD)
+			# Thanks to: https://github.com/Duncaen/OpenDoas/issues/21#issuecomment-854727152
+			OUT="$(echo "spawn doas $@;
+				expect \"password: \" { send -- \"$_PASS\r\"};
+				expect eof" | expect)"
+
+			fail="Authentication failed"
+			if [ "${OUT#*$fail}" != "$OUT" ]; then
+				echo "sudo: $fail"
+				return 99
+			fi
+
+			echo "$OUT"
+		;;
+		*)
+			echo "sudo: unsupported OS $OS"
+			return $EXIT_INCOMPATIBLE
+		;;
+	esac
+}
+
+EXECUTE="sudo_execute"

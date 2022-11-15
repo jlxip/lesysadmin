@@ -1,0 +1,46 @@
+#!/bin/sh -e
+
+INCLUDE="os distro sudo"
+
+function install_execute() {
+	if [ $# -ne 1 ]; then
+		echo 'install: exactly one argument needed'
+		return 99
+	fi
+
+	OS="$(os_execute)"
+	case "$OS" in
+		Linux)
+			DISTRO="$(distro_execute)"
+			case "$DISTRO" in
+				debian | ubuntu)
+					dpkg -s $1 >/dev/null 2>/dev/null && return $EXIT_SKIP || :
+
+					OUT="$(sudo_execute apt install -y $1)"
+					# Possibly check here if it went ok
+					echo "$OUT"
+				;;
+				*)
+					echo "install: unsupported distro $DISTRO"
+					return $EXIT_INCOMPATIBLE
+				;;
+			esac
+		;;
+		OpenBSD)
+			pkg_info -q | grep "^$1-" >/dev/null 2>/dev/null && return $EXIT_SKIP || :
+
+			OUT="$(sudo_execute pkg_add "$1")"
+			fail="Can't find $1"
+			if [ "${OUT#*$fail}" != "$OUT" ]; then
+				echo "install: $fail"
+				return 99
+			fi
+		;;
+		*)
+			echo "install: unsupported OS $OS"
+			return $EXIT_INCOMPATIBLE
+		;;
+	esac
+}
+
+EXECUTE="install_execute"

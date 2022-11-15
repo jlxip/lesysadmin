@@ -1,0 +1,107 @@
+#!/bin/sh -e
+
+# Colors!
+export RED="\033[1;31m"
+export RESET="\033[0m"
+function red() {
+	echo -e $2 "$RED$1$RESET"
+}
+export GREEN="\033[1;32m"
+function green() {
+	echo -e $2 "$GREEN$1$RESET"
+}
+export BLUE="\033[1;34m"
+function blue() {
+	echo -e $2 "$BLUE$1$RESET"
+}
+
+export -f red green blue
+
+# Cryptographic functions
+export CRYPTO="openssl enc -aes-256-cbc -pbkdf2 -a -pass env:CONFIGPASS -in -"
+function encrypt() { $CRYPTO; }
+function decrypt() { $CRYPTO -d; }
+export -f encrypt decrypt
+
+# The database
+if [ "$LESYSADMIN" = "" ]; then
+	export LESYSADMIN="$HOME/.lesysadmin"
+fi
+
+# Ask for the pass
+if [ ! -f "$LESYSADMIN" ]; then
+	blue "This is your first time running Le Sysadmin. ${GREEN}Welcome!"
+	blue "The database will be encrypted, give it a password now"
+	blue "Password: " -n
+	read -s CONFIGPASS
+	export CONFIGPASS
+	echo
+
+	blue "Again, for good measure: " -n
+	read -s tmp
+	echo
+
+	if [ "$CONFIGPASS" != "$tmp" ]; then
+		red "Passwords don't match. What a great start."
+		red "Go have some rest. Le Sysadmin can destroy many servers in seconds."
+		exit 1
+	fi
+	echo
+else
+	echo -n "Enter password: "
+	read -s CONFIGPASS
+	export CONFIGPASS
+	echo
+fi
+
+# Initialize the DB
+if [ ! -f "$LESYSADMIN" ]; then
+	echo '{"systems": {}, "groups": {}}' | encrypt > "$LESYSADMIN"
+	chmod 600 "$LESYSADMIN"
+fi
+
+# For good measure
+if [ "$(stat -c "%a" "$LESYSADMIN")" -ne 600 ]; then
+	red "Too loose permissions on \"$LESYSADMIN\". Please give it 0600."
+	exit 1
+fi
+
+# Load the DB
+reloadDB() {
+	cat "$LESYSADMIN" | decrypt &> /dev/null || (echo 'Wrong password'; exit 1)
+	export CONFIG="$(cat "$LESYSADMIN" | decrypt)" # Again
+}
+reloadDB
+export -f reloadDB
+
+# This comes very handy when debugging
+if [ ! -z "$DUMP" ]; then
+	echo "$CONFIG"
+	exit
+fi
+
+# DB access
+function query() {
+	echo $CONFIG | jq -r "$1"
+}
+
+function update() {
+	export CONFIG="$(echo "$CONFIG" | jq "$1")"
+	echo "$CONFIG" | encrypt > "$LESYSADMIN"
+}
+
+export -f query update
+
+# Find playbooks
+function findplaybook() {
+	if [ -f "$DIR/playbooks/$1" ]; then
+		echo "$DIR/playbooks/$1"
+	elif [ -f "$HOME/.playbooks/$1" ]; then
+		echo "$HOME/.playbooks/$1"
+	else
+		red "Could not locate playbook ${BLUE}$1" >&2
+		return 1
+	fi
+}
+
+export -f findplaybook
