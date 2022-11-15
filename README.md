@@ -86,5 +86,7 @@ Under `playbooks/` in this repository, there are some default playbooks that mig
 | sudo    | `sudo_execute`    | command      | Executes a command as superuser, using the password given with `lesys p`. In environment with no `sudo`, it uses `doas`. |
 | install | `install_execute` | package name | Installs a package. Returns `EXIT_SKIP` if already installed.                                                            |
 
+You can check [my playbooks](https://github.com/jlxip/dotfiles/tree/master/playbooks) as well, which are more realistic and useful.
+
 ## Additional information
 - Zodiac follows [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html).
