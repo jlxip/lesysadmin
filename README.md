@@ -53,7 +53,7 @@ Playbooks have both a return value (`OK`, in this case) and, sometimes, print to
 LSOUT=1 lesys run myserver os
 ```
 
-[!os2](img/os2.jpg)
+![os2](imgs/os2.jpg)
 
 When debugging, you can set the `DEBUG` env var to view the commands being sent. If contributing to the project, you can set the `DUMP` env var to view the unencrypted json. Careful: both will output sensitive data.
 
