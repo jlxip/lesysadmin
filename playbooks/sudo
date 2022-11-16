@@ -9,7 +9,21 @@ function sudo_execute() {
 	OS="$(os_execute)"
 	case "$OS" in
 		Linux)
-			echo "$_PASS" | sudo -S $@ 2>&1
+			# sudo -S gives problems with executions for programs that read
+			#   from stdin, and in case the authentication has been kept
+			#   (no password required), so let's do it this way
+			# Drop the pass
+			TEMP="$(mktemp)"
+			touch "$TEMP"
+			chmod 700 "$TEMP"
+			echo "#!/bin/sh -e" >> "$TEMP"
+			echo "echo \"$_PASS\"" >> "$TEMP"
+
+			SUDO_ASKPASS="$TEMP" sudo -A $@ 2>&1 && ret=0 || ret=$?
+
+			shred "$TEMP" || :
+			rm "$TEMP"
+			return $ret
 		;;
 		OpenBSD)
 			# Thanks to: https://github.com/Duncaen/OpenDoas/issues/21#issuecomment-854727152

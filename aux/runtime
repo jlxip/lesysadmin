@@ -3,8 +3,8 @@
 # Runtime utilities for playbooks
 
 export EXIT_OK=0
-export EXIT_SKIP=1
-export EXIT_INCOMPATIBLE=2
+export EXIT_SKIP=130
+export EXIT_INCOMPATIBLE=131
 
 assert_last_ok() {
 	case $? in

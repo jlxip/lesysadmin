@@ -68,13 +68,13 @@ Playbooks are simple POSIX shell scripts. They have three parts:
 
 The execute function must `return` a value. If no `return` is specified, it will return 0 (shell rules), which is the same as `EXIT_OK`. The following return values are defined:
 - `EXIT_OK`, `0`. Everything went fine.
-- `EXIT_SKIP`, `1`. The playbook skipped execution because it was not necessary. A playbook might want to return this value, for instance, if its purpose is to install a package, and it's already installed. `EXIT_SKIP` has the same implications as `EXIT_OK`: it's not an error.
-- `EXIT_INCOMPATIBLE`, `2`. The playbook cannot be executed on the specified server. Playbook writers should try to be OS-independent, but if the OS isn't supported in it, it should return this value. For instance, `distro` returns `EXIT_INCOMPATIBLE` if it's ran on a non-Linux server.
+- `EXIT_SKIP`, `130`. The playbook skipped execution because it was not necessary. A playbook might want to return this value, for instance, if its purpose is to install a package, and it's already installed. `EXIT_SKIP` has the same implications as `EXIT_OK`: it's not an error.
+- `EXIT_INCOMPATIBLE`, `131`. The playbook cannot be executed on the specified server. Playbook writers should try to be OS-independent, but if the OS isn't supported in it, it should return this value. For instance, `distro` returns `EXIT_INCOMPATIBLE` if it's ran on a non-Linux server.
 - Any other value will be treated as an unexpected error, and its output will be written to stdout (as if `LSOUT` was set). I'd suggest using `99`.
 
 Now that you know this, you can look at the trivial example of [`os`](https://github.com/jlxip/lesysadmin/blob/master/playbooks/os), and also [`distro`](https://github.com/jlxip/lesysadmin/blob/master/playbooks/distro), which is the simplest that uses `INCLUDE`. Then, you can have a look at [`install`](https://github.com/jlxip/lesysadmin/blob/master/playbooks/install) too, which is non-trivial.
 
-`set -e` is set on all playbooks, which stops execution if anything returns non-zero. This is generally good practice since the playbook will not enter undefined behavior. `set +e` can disable it, but please be very careful. If you decide to disable it, the exported function `assert_last_ok` will check if exit in case `$?` is anything other than `EXIT_OK` or `EXIT_SKIP`.
+`set -e` is set on all playbooks, which stops execution if anything returns non-zero. This is generally good practice since the playbook will not enter undefined behavior. `set +e` can disable it, but please be very careful. If you decide to disable it, the exported function `assert_last_ok` will check if exit in case `$?` is anything other than `EXIT_OK` or `EXIT_SKIP`. `set -u` is on as well.
 
 ## Given playbooks
 Under `playbooks/` in this repository, there are some default playbooks that might be useful for the general use case.
@@ -89,4 +89,4 @@ Under `playbooks/` in this repository, there are some default playbooks that mig
 You can check [my playbooks](https://github.com/jlxip/dotfiles/tree/master/playbooks) as well, which are more realistic and useful.
 
 ## Additional information
-- Zodiac follows [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html).
+- Le Sysadmin follows [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html).

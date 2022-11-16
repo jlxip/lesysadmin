@@ -1,0 +1,68 @@
+#!/bin/sh -e
+
+INCLUDE="os distro install init"
+
+function cron_execute() {
+	if [ $# -ne 3 ]; then
+		echo "Usage: cron_execute add <user> <line>"
+		echo "Usage: cron_execute del <user> <line>"
+		return 99
+	fi
+
+	OS="$(os_execute)"
+	if [ "$OS" != "Linux" ]; then
+		# I haven't tried in others
+		echo "cron: unsupported OS: $OS"
+		return $EXIT_INCOMPATIBLE
+	fi
+
+	# Where's the crontab?
+	DISTRO="$(distro_execute)"
+	case "$DISTRO" in
+		ubuntu)
+			FILE="/var/spool/cron/crontabs/$2"
+		;;
+		*)
+			echo "cron: unsupported distro: $DISTRO"
+			return $EXIT_INCOMPATIBLE
+		;;
+	esac
+
+	install_execute cron || assert_last_ok
+	init_execute start cron
+	init_execute enable cron
+
+	# Check user exists
+	id "$2" >/dev/null 2>/dev/null || (echo "cron: user not found: $2"; return 99)
+
+	# Is the line there?
+	sudo_execute -u "$2" -g "crontab" grep "^${3}$" "$FILE" >/dev/null 2>/dev/null \
+		&& EXISTS=0 || EXISTS=$?
+
+	# Perform said action
+	case "$1" in
+		add)
+			if [ $EXISTS -eq 0 ]; then
+				return $EXIT_SKIP # Already there
+			fi
+
+			echo "$3" | sudo_execute -u "$2" -g "crontab" tee -a "$FILE"
+			sudo_execute chown "$2":crontab "$FILE"
+			sudo_execute chmod 600 "$FILE"
+		;;
+		del)
+			if [ $EXISTS -ne 0 ]; then
+				return $EXIT_SKIP # Not even there
+			fi
+
+			REST="$(sudo_execute -u "$2" -g "crontab" grep -v "^${3}$" "$FILE")" || REST=""
+			echo "$REST" | sudo_execute -u "$2" -g "crontab" tee "$FILE"
+		;;
+		*)
+			echo "Unknown command: $1"
+			return 99
+		;;
+	esac
+}
+
+EXECUTE="cron_execute"

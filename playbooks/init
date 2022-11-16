@@ -1,0 +1,29 @@
+#!/bin/sh -e
+
+INCLUDE="os sudo"
+
+function init_execute() {
+	if [ $# -ne 2 ]; then
+		echo "Usage: init_execute <action> <service>"
+		echo "With <action> = start | stop | enable | disable"
+		return 99
+	fi
+
+	OS="$(os_execute)"
+	case "$OS" in
+		Linux)
+			if [ -z "$(whereis systemctl)" ]; then
+				echo "init: non-systemd inits not implemented"
+				return $EXIT_INCOMPATIBLE
+			fi
+
+			sudo_execute systemctl "$1" "$2"
+		;;
+		*)
+			echo "init: incompatible OS: $OS"
+			return 99
+		;;
+	esac
+}
+
+EXECUTE="init_execute"
