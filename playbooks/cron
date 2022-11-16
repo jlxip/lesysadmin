@@ -19,7 +19,7 @@ function cron_execute() {
 	# Where's the crontab?
 	DISTRO="$(distro_execute)"
 	case "$DISTRO" in
-		ubuntu)
+		ubuntu | debian)
 			FILE="/var/spool/cron/crontabs/$2"
 		;;
 		*)

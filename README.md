@@ -79,12 +79,14 @@ Now that you know this, you can look at the trivial example of [`os`](https://gi
 ## Given playbooks
 Under `playbooks/` in this repository, there are some default playbooks that might be useful for the general use case.
 
-| Name    | Function          | Arguments    | Description                                                                                                              |
-|---------|-------------------|--------------|--------------------------------------------------------------------------------------------------------------------------|
-| os      | `os_execute`      |              | Prints the operating system                                                                                              |
-| distro  | `distro_execute`  |              | Prints the Linux distribution, as specified in /etc/os-release                                                           |
-| sudo    | `sudo_execute`    | command      | Executes a command as superuser, using the password given with `lesys p`. In environment with no `sudo`, it uses `doas`. |
-| install | `install_execute` | package name | Installs a package. Returns `EXIT_SKIP` if already installed.                                                            |
+| Name    | Function          | Arguments                | Description                                                                                                              |
+|---------|-------------------|--------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| os      | `os_execute`      |                          | Prints the operating system                                                                                              |
+| distro  | `distro_execute`  |                          | Prints the Linux distribution, as specified in /etc/os-release                                                           |
+| sudo    | `sudo_execute`    | <command>                | Executes a command as superuser, using the password given with `lesys p`. In environment with no `sudo`, it uses `doas`. |
+| install | `install_execute` | <package name>           | Installs a package. Returns `EXIT_SKIP` if already installed.                                                            |
+| init    | `init_execute`    | <action> <service>       | OS-independent way of `start`, `stop`, `enable`, and `disable` services                                                  |
+| cron    | `cron_execute`    | <add/del> <user> <order> | For adding cronjobs. If already added (or already removed), returns `EXIT_SKIP`                                          |
 
 You can check [my playbooks](https://github.com/jlxip/dotfiles/tree/master/playbooks) as well, which are more realistic and useful.
 

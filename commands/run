@@ -40,7 +40,7 @@ rec() {
 SCRIPT="
 set -e # 👀
 set -u # ✨
-_PASS=$PASS
+_PASS=\"$PASS\"
 $(cat "$DIR/aux/runtime")
 $(rec $2 T "${@: 3}")
 "

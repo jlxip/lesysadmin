@@ -18,7 +18,7 @@ if [ "$N" -eq 0 ]; then
 	exit 1
 fi
 
-green "Running ${BLUE}$2${GREEN} on $N server" -e
+green "Running ${BLUE}$2${GREEN} on $N server" -n
 if [ "$N" -eq 1 ]; then
 	echo
 else
