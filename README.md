@@ -1,3 +1,8 @@
+# Deprecation notice
+Le Sysadmin, as of January 28th, 2024 is no longer mantained because I no longer need to use it. Last commit was on November 16, 2022.
+
+The project should work fine and is pretty stable. You can still use it if you really want to, or start a fork. This should not be necessary though, since the bases are already here.
+
 # Le Sysadmin
 
 ## Introduction
